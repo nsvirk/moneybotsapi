@@ -56,20 +56,20 @@ func (cs *CronService) Start() {
 	// ------------------------------------------------------------
 	// Add your SCHEDULED jobs here
 	// ------------------------------------------------------------
-	cs.addScheduledJob("API Instruments UPDATE Job", cs.ApiInstrumentsUpdateJob, "0 8 * * 1-5")      // Once at 08:00am, Mon-Fri
-	cs.addScheduledJob("API Indices UPDATE Job", cs.ApiIndicesUpdateJob, "1 8 * * 1-5")              // Once at 08:01am, Mon-Fri
-	cs.addScheduledJob("TickerInstruments UPDATE Job", cs.TickerInstrumentsUpdateJob, "2 8 * * 1-5") // Once at 08:02am, Mon-Fri
-	cs.addScheduledJob("Ticker START Job", cs.TickerStartJob, "55 8	* * 1-5")                        // Once at 08:55am, Mon-Fri
-	cs.addScheduledJob("Ticker STOP Job", cs.TickerStopJob, "59 23 * * 1-5")                         // Once at 11:59pm, Mon-Fri
+	cs.addScheduledJob("API Instruments UPDATE Job", cs.ApiInstrumentsUpdateJob, "0 8 * * 1-5") // Once at 08:00am, Mon-Fri
+	cs.addScheduledJob("API Indices UPDATE Job", cs.ApiIndicesUpdateJob, "1 8 * * 1-5")         // Once at 08:01am, Mon-Fri
+	// cs.addScheduledJob("TickerInstruments UPDATE Job", cs.TickerInstrumentsUpdateJob, "2 8 * * 1-5") // Once at 08:02am, Mon-Fri
+	// cs.addScheduledJob("Ticker START Job", cs.TickerStartJob, "55 8	* * 1-5")                        // Once at 08:55am, Mon-Fri
+	// cs.addScheduledJob("Ticker STOP Job", cs.TickerStopJob, "59 23 * * 1-5")                         // Once at 11:59pm, Mon-Fri
 
 	// ------------------------------------------------------------
 	// Add your STARTUP jobs here
 	// ------------------------------------------------------------
 	cs.addStartupJob("API Instruments UPDATE Job", cs.ApiInstrumentsUpdateJob, 1*time.Second)
 	cs.addStartupJob("API Indices UPDATE Job", cs.ApiIndicesUpdateJob, 5*time.Second)
-	cs.addStartupJob("TickerInstruments UPDATE Job", cs.TickerInstrumentsUpdateJob, 19*time.Second)
-	cs.addStartupJob("TickerData TRUNCATE Job", cs.TickerDataTruncateJob, 25*time.Second)
-	cs.addStartupJob("Ticker START Job", cs.TickerStartJob, 28*time.Second)
+	// cs.addStartupJob("TickerInstruments UPDATE Job", cs.TickerInstrumentsUpdateJob, 19*time.Second)
+	// cs.addStartupJob("TickerData TRUNCATE Job", cs.TickerDataTruncateJob, 25*time.Second)
+	// cs.addStartupJob("Ticker START Job", cs.TickerStartJob, 28*time.Second)
 	// ------------------------------------------------------------
 
 	cs.c.Start()
