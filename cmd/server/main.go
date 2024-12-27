@@ -11,7 +11,7 @@ import (
 	"github.com/nsvirk/moneybotsapi/internal/api"
 	"github.com/nsvirk/moneybotsapi/internal/config"
 	"github.com/nsvirk/moneybotsapi/internal/repository"
-	"github.com/nsvirk/moneybotsapi/pkg/utils/logger"
+	"github.com/nsvirk/moneybotsapi/internal/utils/logger"
 )
 
 func main() {

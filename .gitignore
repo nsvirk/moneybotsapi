@@ -28,7 +28,7 @@ go.work.sum
 .env.os
 .DS_Store
 Makefile
-logs
+_logs
 _api_test
 moneybotsapi
 moneybotsapi.service

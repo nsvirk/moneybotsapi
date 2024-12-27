@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/nsvirk/moneybotsapi/internal/config"
-	"github.com/nsvirk/moneybotsapi/pkg/utils/response"
+	"github.com/nsvirk/moneybotsapi/internal/utils/response"
 	"gorm.io/gorm"
 )
 

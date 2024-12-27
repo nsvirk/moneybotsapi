@@ -84,8 +84,8 @@ func InitLogger(db *gorm.DB) error {
 		return fmt.Errorf("failed to create log file: %v", err)
 	}
 
-	// Configure zerolog
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	// Configure zerolog - Format RFC3339
+	zerolog.TimeFieldFormat = time.RFC3339
 
 	// Create console writer with colors
 	consoleWriter := zerolog.ConsoleWriter{
@@ -146,7 +146,7 @@ func getLogDirectory() string {
 	if os.Getenv("MB_API_ENV") == "production" {
 		return "/var/log/moneybotsapi"
 	}
-	return "logs"
+	return "_logs"
 }
 
 func getDailyLogFile() (*os.File, error) {
