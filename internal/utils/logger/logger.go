@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gorm.io/gorm"
+	"github.com/uptrace/bun"
 )
 
 var (
@@ -19,12 +20,14 @@ var (
 )
 
 type APILog struct {
-	ID        uint      `gorm:"primarykey"`
-	Timestamp time.Time `gorm:"index"`
-	Level     string
-	Message   string
-	Module    string `gorm:"index"`
-	Data      string `gorm:"type:jsonb"`
+	bun.BaseModel `bun:"table:logs,alias:l"`
+
+	ID        uint            `bun:"id,pk,autoincrement"`
+	Timestamp time.Time       `bun:"timestamp,notnull"`
+	Level     string          `bun:"level,notnull"`
+	Message   string          `bun:"message,notnull"`
+	Module    string          `bun:"module,notnull"`
+	Data      json.RawMessage `bun:"data,type:jsonb"`
 }
 
 func (APILog) TableName() string {
@@ -32,14 +35,15 @@ func (APILog) TableName() string {
 }
 
 type DBWriter struct {
-	db *gorm.DB
+	db *bun.DB
 }
 
-func NewDBWriter(db *gorm.DB) *DBWriter {
+func NewDBWriter(db *bun.DB) *DBWriter {
 	return &DBWriter{db: db}
 }
 
 func (w *DBWriter) Write(p []byte) (n int, err error) {
+	// Parse the incoming JSON
 	var event map[string]interface{}
 	if err := json.Unmarshal(p, &event); err != nil {
 		return 0, err
@@ -54,17 +58,27 @@ func (w *DBWriter) Write(p []byte) (n int, err error) {
 		module = m
 	}
 
-	// Create log entry
-	logEntry := APILog{
+	// Remove time field as we store it separately
+	delete(event, "time")
+
+	// Create raw JSON for storage
+	rawJSON, err := json.Marshal(event)
+	if err != nil {
+		return 0, err
+	}
+
+	// Create log entry with raw JSON data
+	logEntry := &APILog{
 		Timestamp: now,
 		Level:     level,
 		Message:   msg,
 		Module:    module,
-		Data:      string(p),
+		Data:      json.RawMessage(rawJSON), // Use RawMessage to store unescaped JSON
 	}
 
-	// Write to database synchronously to ensure it works
-	if err := w.db.Create(&logEntry).Error; err != nil {
+	// Write to database
+	ctx := context.Background()
+	if _, err := w.db.NewInsert().Model(logEntry).Exec(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to write log to database: %v\n", err)
 		return 0, err
 	}
@@ -72,10 +86,37 @@ func (w *DBWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func InitLogger(db *gorm.DB) error {
-	// Auto migrate the logs table
-	if err := db.AutoMigrate(&APILog{}); err != nil {
-		return err
+func InitLogger(db *bun.DB) error {
+	ctx := context.Background()
+
+	// Create logs table if it doesn't exist
+	if _, err := db.NewCreateTable().
+		Model((*APILog)(nil)).
+		IfNotExists().
+		WithForeignKeys().
+		Exec(ctx); err != nil {
+		return fmt.Errorf("failed to create logs table: %v", err)
+	}
+
+	// Create indexes
+	_, err := db.NewCreateIndex().
+		Model((*APILog)(nil)).
+		Index("idx_logs_timestamp").
+		Column("timestamp").
+		IfNotExists().
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create timestamp index: %v", err)
+	}
+
+	_, err = db.NewCreateIndex().
+		Model((*APILog)(nil)).
+		Index("idx_logs_module").
+		Column("module").
+		IfNotExists().
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create module index: %v", err)
 	}
 
 	// Set up file logging
@@ -84,7 +125,7 @@ func InitLogger(db *gorm.DB) error {
 		return fmt.Errorf("failed to create log file: %v", err)
 	}
 
-	// Configure zerolog - Format RFC3339
+	// Configure zerolog
 	zerolog.TimeFieldFormat = time.RFC3339
 
 	// Create console writer with colors
@@ -161,7 +202,7 @@ func getDailyLogFile() (*os.File, error) {
 	return os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 }
 
-func rotateLogDaily(db *gorm.DB) {
+func rotateLogDaily(db *bun.DB) {
 	for {
 		now := time.Now()
 		next := now.Add(24 * time.Hour)

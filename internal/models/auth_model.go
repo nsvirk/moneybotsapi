@@ -3,15 +3,19 @@ package models
 
 import (
 	"time"
+
+	"github.com/uptrace/bun"
 )
 
 const AuthTableName = "auth"
 
 type AuthModel struct {
-	UserId         string    `gorm:"primaryKey;uniqueIndex;index:idx_uid_hpw,priority:1" json:"user_id"`
-	HashedPassword string    `gorm:"index:idx_uid_hpw,priority:2" json:"-"`
-	CreatedAt      time.Time `gorm:"autoCreateTime" json:"-"`
-	UpdatedAt      time.Time `gorm:"autoUpdateTime" json:"-"`
+	bun.BaseModel `bun:"table:auth,alias:a"`
+
+	UserId         string    `bun:"user_id,pk" json:"user_id"`
+	HashedPassword string    `bun:"hashed_password,notnull" json:"-"`
+	CreatedAt      time.Time `bun:"created_at,notnull,default:current_timestamp" json:"-"`
+	UpdatedAt      time.Time `bun:"updated_at,notnull,default:current_timestamp" json:"-"`
 }
 
 func (AuthModel) TableName() string {

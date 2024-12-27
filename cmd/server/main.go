@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -24,11 +25,12 @@ func main() {
 	// Print the configuration
 	fmt.Printf("%+v", cfg)
 
-	// Connect to Postgres
+	// Connect to Postgres using Bun
 	db, err := repository.ConnectPostgres(cfg)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to connect to Postgres: %v", err))
 	}
+	defer db.Close()
 
 	// Initialize logger
 	if err := logger.InitLogger(db); err != nil {

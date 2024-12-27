@@ -6,23 +6,20 @@ import (
 	"log"
 
 	"github.com/labstack/echo/v4"
+	"github.com/uptrace/bun"
+
 	"github.com/nsvirk/moneybotsapi/internal/config"
 	"github.com/nsvirk/moneybotsapi/internal/utils/response"
-	"gorm.io/gorm"
 )
 
-// SetupRoutes configures the routes for the API
-func SetupRoutes(e *echo.Echo, cfg *config.Config, db *gorm.DB) {
-
+func SetupRoutes(e *echo.Echo, cfg *config.Config, db *bun.DB) {
 	// Create a group for all API routes
 	api := e.Group("")
 
 	// Index route
 	api.GET("/", indexRoute)
-
 }
 
-// indexRoute sets up the index route for the API
 func indexRoute(c echo.Context) error {
 	cfg, err := config.Get()
 	if err != nil {
